@@ -52,7 +52,7 @@ MCPSec fills this gap.
 ### Install
 
 ```bash
-pip install mcpsec
+pip install git+https://github.com/mcp-shark/mcpsec.git
 ```
 
 ### First Scan
