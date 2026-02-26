@@ -89,10 +89,15 @@ mcpsec serve                              # stdio (Claude Desktop, Cursor)
 mcpsec serve --transport http --port 8000  # Streamable HTTP
 ```
 
-### Claude Desktop / Claude Code
+### Claude Desktop / Claude Code, VS Code, Cursor Dev Test Set-up
+
+All three clients have the same config format distinction — installed vs source. Here's each:
+
+**Claude Desktop / Claude Code**
 
 Add to `claude_desktop_config.json`:
 
+Installed (`pip install -e .`):
 ```json
 {
   "mcpServers": {
@@ -104,35 +109,57 @@ Add to `claude_desktop_config.json`:
 }
 ```
 
-### Cursor
-
-Add to `.cursor/mcp.json`:
-
+From source:
 ```json
 {
   "mcpServers": {
     "mcpsec": {
-      "command": "mcpsec",
-      "args": ["serve"]
+      "command": "/path/to/mcpsec/.venv/bin/python",
+      "args": ["-m", "mcpsec.cli", "serve"],
+      "cwd": "/path/to/mcpsec"
     }
   }
 }
 ```
 
-### VS Code
+**Cursor**
+
+Add to `.cursor/mcp.json` — **same format as Claude Desktop** for both installed and source options.
+
+**VS Code**
 
 Add to `.vscode/settings.json`:
 
+Installed:
 ```json
 {
-  "mcp.servers": {
-    "mcpsec": {
-      "command": "mcpsec",
-      "args": ["serve"]
+  "mcp": {
+    "servers": {
+      "mcpsec": {
+        "command": "mcpsec",
+        "args": ["serve"]
+      }
     }
   }
 }
 ```
+
+From source:
+```json
+{
+  "mcp": {
+    "servers": {
+      "mcpsec": {
+        "command": "/path/to/mcpsec/.venv/bin/python",
+        "args": ["-m", "mcpsec.cli", "serve"],
+        "cwd": "/path/to/mcpsec"
+      }
+    }
+  }
+}
+```
+
+**Summary:** Claude Desktop, Claude Code, and Cursor all use `mcpServers` key. VS Code uses `mcp.servers`. The installed vs source distinction is the same across all three.
 
 ### Passthrough LLM Flow
 
