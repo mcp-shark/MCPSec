@@ -1,0 +1,396 @@
+
+  ╔══════════════════════════════════════╗
+  ║   MCPSec — MCP Security Scanner      ║
+  ║   v0.1.0                              ║
+  ╚══════════════════════════════════════╝
+
+{
+  "$schema": "https://docs.oasis-open.org/sarif/sarif/v2.1.0/cos02/schemas/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "MCPSec",
+          "version": "0.1.0",
+          "informationUri": "https://github.com/mcpsec/mcpsec",
+          "semanticVersion": "0.1.0",
+          "rules": [
+            {
+              "id": "MCP-AUTH-006",
+              "name": "MCPAUTH006",
+              "shortDescription": {
+                "text": "Authorization Server Metadata Endpoint Missing"
+              },
+              "fullDescription": {
+                "text": "MCP clients cannot verify PKCE support, discover token endpoint, or check DCR support. The spec requires clients to refuse authorization if neither discovery mechanism returns valid metadata."
+              },
+              "help": {
+                "text": "Serve OAuth 2.0 Authorization Server Metadata at /.well-known/oauth-authorization-server (preferred) or OpenID Connect Discovery at /.well-known/openid-configuration. FastMCP OAuthProvider serves this automatically.",
+                "markdown": "## Authorization Server Metadata Endpoint Missing\n\n**Severity:** high (CVSS 7.2)\n\n**CWE:** CWE-287 \u2014 Improper Authentication\n\n### Risk\n\nMCP clients cannot verify PKCE support, discover token endpoint, or check DCR support. The spec requires clients to refuse authorization if neither discovery mechanism returns valid metadata.\n\n### Recommendation\n\nServe OAuth 2.0 Authorization Server Metadata at /.well-known/oauth-authorization-server (preferred) or OpenID Connect Discovery at /.well-known/openid-configuration. FastMCP OAuthProvider serves this automatically.\n\n### Fix Example\n\n```python\n# FastMCP OAuthProvider serves AS metadata automatically\nfrom fastmcp import FastMCP\nfrom fastmcp.server.auth import OAuthProvider\n\nmcp = FastMCP(\n    name='My Server',\n    auth=OAuthProvider(\n        issuer='https://auth.example.com',\n        # ... provider config\n    )\n)\n# /.well-known/oauth-authorization-server served automatically\n```\n\n### Standards\n\n- `MCP-SPEC-AUTH`: Authorization Server Metadata Discovery \u2014 MUST support RFC 8414 or OIDC (MUST)\n- `RFC8414`: OAuth 2.0 Authorization Server Metadata (MUST)\n- `OWASP-MCP07`: MCP07 \u2014 Insufficient Authentication & Authorization"
+              },
+              "defaultConfiguration": {
+                "level": "error",
+                "rank": 70.0
+              },
+              "properties": {
+                "severity": "high",
+                "cvssScore": 7.2,
+                "auditor": "auth",
+                "detectionMode": "endpoint",
+                "confidence": "definitive",
+                "remediationEffort": "high",
+                "tags": [
+                  "security",
+                  "mcp",
+                  "auditor/auth",
+                  "detection/endpoint",
+                  "CWE-287",
+                  "MCP-SPEC-AUTH",
+                  "RFC8414",
+                  "OWASP-MCP07"
+                ],
+                "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:H"
+              },
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CWE-287",
+                    "guid": "00000000-0000-0000-0000-000000000287",
+                    "toolComponent": {
+                      "name": "CWE"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "MCP-AUTH-001",
+              "name": "MCPAUTH001",
+              "shortDescription": {
+                "text": "Protected Resource Metadata Missing"
+              },
+              "fullDescription": {
+                "text": "Entry point of the entire MCP auth discovery chain is missing. MCP clients cannot determine authorization server location, cannot discover required scopes, and per the spec MUST fail the connection attempt. The server has no machine-readable auth mechanism."
+              },
+              "help": {
+                "text": "Serve RFC 9728 compliant metadata at /.well-known/oauth-protected-resource with 'authorization_servers' array. Alternatively, include resource_metadata URI in WWW-Authenticate header on 401 responses. FastMCP serves this endpoint automatically when any auth provider is configured.",
+                "markdown": "## Protected Resource Metadata Missing\n\n**Severity:** critical (CVSS 8.6)\n\n**CWE:** CWE-287 \u2014 Improper Authentication\n\n### Risk\n\nEntry point of the entire MCP auth discovery chain is missing. MCP clients cannot determine authorization server location, cannot discover required scopes, and per the spec MUST fail the connection attempt. The server has no machine-readable auth mechanism.\n\n### Recommendation\n\nServe RFC 9728 compliant metadata at /.well-known/oauth-protected-resource with 'authorization_servers' array. Alternatively, include resource_metadata URI in WWW-Authenticate header on 401 responses. FastMCP serves this endpoint automatically when any auth provider is configured.\n\n### Fix Example\n\n```python\n# FastMCP \u2014 automatic endpoint, just configure auth\nfrom fastmcp import FastMCP\nfrom fastmcp.server.auth import OAuthProvider\n\nmcp = FastMCP(\n    name='My Server',\n    auth=OAuthProvider(...)\n)\n# /.well-known/oauth-protected-resource served automatically\n```\n\n### Standards\n\n- `MCP-SPEC-AUTH`: Protected Resource Metadata Discovery Requirements (MUST)\n- `RFC9728`: Protected Resource Metadata (MUST)\n- `OWASP-MCP07`: MCP07 \u2014 Insufficient Authentication & Authorization\n- `FMCP-TIER1`: TokenVerifier \u2014 minimum auth tier (RECOMMENDED)"
+              },
+              "defaultConfiguration": {
+                "level": "error",
+                "rank": 90.0
+              },
+              "properties": {
+                "severity": "critical",
+                "cvssScore": 8.6,
+                "auditor": "auth",
+                "detectionMode": "endpoint",
+                "confidence": "definitive",
+                "remediationEffort": "high",
+                "tags": [
+                  "security",
+                  "mcp",
+                  "auditor/auth",
+                  "detection/endpoint",
+                  "CWE-287",
+                  "MCP-SPEC-AUTH",
+                  "RFC9728",
+                  "OWASP-MCP07",
+                  "FMCP-TIER1"
+                ],
+                "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:N"
+              },
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CWE-287",
+                    "guid": "00000000-0000-0000-0000-000000000287",
+                    "toolComponent": {
+                      "name": "CWE"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "MCP-TOOL-004",
+              "name": "MCPTOOL004",
+              "shortDescription": {
+                "text": "Tool Input Schema Missing Validation Constraints"
+              },
+              "fullDescription": {
+                "text": "Unconstrained string parameters for file paths, URLs, commands, or structured content are the entry point for injection attacks. Without maxLength, pattern, or enum constraints, LLM-generated inputs can contain path traversal sequences (../), shell metacharacters, or oversized payloads."
+              },
+              "help": {
+                "text": "Add JSON Schema validation constraints to all sensitive parameters. Use 'maxLength' to prevent oversized inputs, 'pattern' for format enforcement, and 'enum' for known-value parameters.",
+                "markdown": "## Tool Input Schema Missing Validation Constraints\n\n**Severity:** high (CVSS 6.8)\n\n**CWE:** CWE-20 \u2014 Improper Input Validation\n\n### Risk\n\nUnconstrained string parameters for file paths, URLs, commands, or structured content are the entry point for injection attacks. Without maxLength, pattern, or enum constraints, LLM-generated inputs can contain path traversal sequences (../), shell metacharacters, or oversized payloads.\n\n### Recommendation\n\nAdd JSON Schema validation constraints to all sensitive parameters. Use 'maxLength' to prevent oversized inputs, 'pattern' for format enforcement, and 'enum' for known-value parameters.\n\n### Fix Example\n\n```python\nfrom pydantic import Field\n\n# BAD \u2014 unconstrained path parameter\n@mcp.tool()\ndef read_file(path: str) -> str:  # \u274c no constraints\n    ...\n\n# GOOD \u2014 constrained with validation\n@mcp.tool()\ndef read_file(\n    path: str = Field(\n        max_length=255,\n        pattern=r'^[a-zA-Z0-9_/.-]+$',  # no ../ or special chars\n        description='Relative file path within the workspace'\n    )\n) -> str:\n    ...\n```\n\n### Standards\n\n- `OWASP-MCP05`: MCP05 \u2014 Command Injection & Execution\n- `MCP-SPEC-INPUT`: Input Validation \u2014 tool input sanitization (SHOULD)\n- `OWASP-LLM02`: LLM02 \u2014 Insecure Output Handling"
+              },
+              "defaultConfiguration": {
+                "level": "error",
+                "rank": 70.0
+              },
+              "properties": {
+                "severity": "high",
+                "cvssScore": 6.8,
+                "auditor": "tools",
+                "detectionMode": "introspection",
+                "confidence": "definitive",
+                "remediationEffort": "low",
+                "tags": [
+                  "security",
+                  "mcp",
+                  "auditor/tools",
+                  "detection/introspection",
+                  "CWE-20",
+                  "OWASP-MCP05",
+                  "MCP-SPEC-INPUT",
+                  "OWASP-LLM02"
+                ],
+                "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:L/A:N"
+              },
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CWE-20",
+                    "guid": "00000000-0000-0000-0000-000000000020",
+                    "toolComponent": {
+                      "name": "CWE"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "MCP-AUTH-001",
+          "ruleIndex": 1,
+          "level": "error",
+          "message": {
+            "text": "GET https://mcp.exa.ai/.well-known/oauth-protected-resource \u2014 HTTP 404. Status: 404. Content-Type: text/plain; charset=utf-8.",
+            "markdown": "**Protected Resource Metadata Missing**\n\nGET https://mcp.exa.ai/.well-known/oauth-protected-resource \u2014 HTTP 404. Status: 404. Content-Type: text/plain; charset=utf-8.\n\n**Risk:** Entry point of the entire MCP auth discovery chain is missing. MCP clients cannot determine authorization server location, cannot discover required scopes, and per the spec MUST fail the connection attempt. The server has no machine-readable auth mechanism."
+          },
+          "properties": {
+            "cvssScore": 8.6,
+            "confidence": "definitive",
+            "detectionMode": "endpoint",
+            "remediationEffort": "high"
+          },
+          "rank": 1.0,
+          "fixes": [
+            {
+              "description": {
+                "text": "Serve RFC 9728 compliant metadata at /.well-known/oauth-protected-resource with 'authorization_servers' array. Alternatively, include resource_metadata URI in WWW-Authenticate header on 401 responses. FastMCP serves this endpoint automatically when any auth provider is configured.\n\nExample:\n# FastMCP \u2014 automatic endpoint, just configure auth\nfrom fastmcp import FastMCP\nfrom fastmcp.server.auth import OAuthProvider\n\nmcp = FastMCP(\n    name='My Server',\n    auth=OAuthProvider(...)\n)\n# /.well-known/oauth-protected-resource served automatically"
+              }
+            }
+          ],
+          "taxa": [
+            {
+              "id": "CWE-287",
+              "guid": "00000000-0000-0000-0000-000000000287",
+              "toolComponent": {
+                "name": "CWE"
+              }
+            },
+            {
+              "id": "OWASP-MCP07",
+              "toolComponent": {
+                "name": "OWASP"
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "MCP-AUTH-006",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "GET https://mcp.exa.ai/.well-known/oauth-authorization-server \u2014 failed or not valid JSON. GET https://mcp.exa.ai/.well-known/openid-configuration \u2014 failed or not valid JSON. Neither discovery endpoint returned valid Authorization Server Metadata.",
+            "markdown": "**Authorization Server Metadata Endpoint Missing**\n\nGET https://mcp.exa.ai/.well-known/oauth-authorization-server \u2014 failed or not valid JSON. GET https://mcp.exa.ai/.well-known/openid-configuration \u2014 failed or not valid JSON. Neither discovery endpoint returned valid Authorization Server Metadata.\n\n**Risk:** MCP clients cannot verify PKCE support, discover token endpoint, or check DCR support. The spec requires clients to refuse authorization if neither discovery mechanism returns valid metadata."
+          },
+          "properties": {
+            "cvssScore": 7.2,
+            "confidence": "definitive",
+            "detectionMode": "endpoint",
+            "remediationEffort": "high"
+          },
+          "rank": 2.0,
+          "fixes": [
+            {
+              "description": {
+                "text": "Serve OAuth 2.0 Authorization Server Metadata at /.well-known/oauth-authorization-server (preferred) or OpenID Connect Discovery at /.well-known/openid-configuration. FastMCP OAuthProvider serves this automatically.\n\nExample:\n# FastMCP OAuthProvider serves AS metadata automatically\nfrom fastmcp import FastMCP\nfrom fastmcp.server.auth import OAuthProvider\n\nmcp = FastMCP(\n    name='My Server',\n    auth=OAuthProvider(\n        issuer='https://auth.example.com',\n        # ... provider config\n    )\n)\n# /.well-known/oauth-authorization-server served automatically"
+              }
+            }
+          ],
+          "taxa": [
+            {
+              "id": "CWE-287",
+              "guid": "00000000-0000-0000-0000-000000000287",
+              "toolComponent": {
+                "name": "CWE"
+              }
+            },
+            {
+              "id": "OWASP-MCP07",
+              "toolComponent": {
+                "name": "OWASP"
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "MCP-TOOL-004",
+          "ruleIndex": 2,
+          "level": "error",
+          "message": {
+            "text": "2 unconstrained sensitive parameter(s) across 2 tool(s):\n  - web_search_exa.query (type: string, sensitivity: command/code, constraints: none)\n  - get_code_context_exa.query (type: string, sensitivity: command/code, constraints: none)",
+            "markdown": "**Tool Input Schema Missing Validation Constraints**\n\n2 unconstrained sensitive parameter(s) across 2 tool(s):\n  - web_search_exa.query (type: string, sensitivity: command/code, constraints: none)\n  - get_code_context_exa.query (type: string, sensitivity: command/code, constraints: none)\n\n**Risk:** Unconstrained string parameters for file paths, URLs, commands, or structured content are the entry point for injection attacks. Without maxLength, pattern, or enum constraints, LLM-generated inputs can contain path traversal sequences (../), shell metacharacters, or oversized payloads."
+          },
+          "properties": {
+            "cvssScore": 6.8,
+            "confidence": "definitive",
+            "detectionMode": "introspection",
+            "remediationEffort": "low"
+          },
+          "rank": 3.0,
+          "fixes": [
+            {
+              "description": {
+                "text": "Add JSON Schema validation constraints to all sensitive parameters. Use 'maxLength' to prevent oversized inputs, 'pattern' for format enforcement, and 'enum' for known-value parameters.\n\nExample:\nfrom pydantic import Field\n\n# BAD \u2014 unconstrained path parameter\n@mcp.tool()\ndef read_file(path: str) -> str:  # \u274c no constraints\n    ...\n\n# GOOD \u2014 constrained with validation\n@mcp.tool()\ndef read_file(\n    path: str = Field(\n        max_length=255,\n        pattern=r'^[a-zA-Z0-9_/.-]+$',  # no ../ or special chars\n        description='Relative file path within the workspace'\n    )\n) -> str:\n    ..."
+              }
+            }
+          ],
+          "taxa": [
+            {
+              "id": "CWE-20",
+              "guid": "00000000-0000-0000-0000-000000000020",
+              "toolComponent": {
+                "name": "CWE"
+              }
+            },
+            {
+              "id": "OWASP-MCP05",
+              "toolComponent": {
+                "name": "OWASP"
+              }
+            },
+            {
+              "id": "OWASP-LLM02",
+              "toolComponent": {
+                "name": "OWASP"
+              }
+            }
+          ]
+        }
+      ],
+      "taxonomies": [
+        {
+          "name": "CWE",
+          "version": "4.14",
+          "organization": "MITRE",
+          "shortDescription": {
+            "text": "Common Weakness Enumeration"
+          },
+          "informationUri": "https://cwe.mitre.org/",
+          "isComprehensive": false,
+          "taxa": [
+            {
+              "id": "CWE-287",
+              "guid": "00000000-0000-0000-0000-000000000287",
+              "name": "Improper Authentication",
+              "shortDescription": {
+                "text": "Improper Authentication"
+              },
+              "helpUri": "https://cwe.mitre.org/data/definitions/287.html"
+            },
+            {
+              "id": "CWE-20",
+              "guid": "00000000-0000-0000-0000-000000000020",
+              "name": "Improper Input Validation",
+              "shortDescription": {
+                "text": "Improper Input Validation"
+              },
+              "helpUri": "https://cwe.mitre.org/data/definitions/20.html"
+            }
+          ]
+        },
+        {
+          "name": "OWASP",
+          "version": "2025",
+          "organization": "OWASP Foundation",
+          "shortDescription": {
+            "text": "OWASP MCP Top 10"
+          },
+          "informationUri": "https://owasp.org/www-project-mcp-top-10/",
+          "isComprehensive": false,
+          "taxa": [
+            {
+              "id": "OWASP-MCP07",
+              "name": "MCP07 \u2014 Insufficient Authentication & Authorization",
+              "shortDescription": {
+                "text": "MCP07 \u2014 Insufficient Authentication & Authorization"
+              }
+            },
+            {
+              "id": "OWASP-MCP05",
+              "name": "MCP05 \u2014 Command Injection & Execution",
+              "shortDescription": {
+                "text": "MCP05 \u2014 Command Injection & Execution"
+              }
+            },
+            {
+              "id": "OWASP-LLM02",
+              "name": "LLM02 \u2014 Insecure Output Handling",
+              "shortDescription": {
+                "text": "LLM02 \u2014 Insecure Output Handling"
+              }
+            }
+          ]
+        }
+      ],
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "commandLine": "mcpsec scan https://mcp.exa.ai",
+          "properties": {
+            "scanId": "scan_20260224_195739_66dd48",
+            "accessLevel": "remote",
+            "depth": "standard",
+            "specVersion": "draft-2025-11-25",
+            "scanDurationSeconds": 1.21
+          }
+        }
+      ],
+      "automationDetails": {
+        "id": "scan_20260224_195739_66dd48",
+        "description": {
+          "text": "MCPSec security scan of https://mcp.exa.ai"
+        }
+      },
+      "properties": {
+        "target": "https://mcp.exa.ai",
+        "maxCvss": 8.6,
+        "passedCiGate": false,
+        "findingCounts": {
+          "critical": 1,
+          "high": 2,
+          "medium": 0,
+          "low": 0,
+          "informational": 0
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCPSec Report — https://mcp.exa.ai</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <style>
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+        background: #0a0e17;
+        color: #c0c8d8;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        line-height: 1.6;
+        padding: 24px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    code, pre { font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace; }
+
+    /* Banner */
+    .banner {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(135deg, #111827 0%, #0f1729 100%);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        padding: 28px 32px;
+        margin-bottom: 24px;
+    }
+    .banner h1 { color: #e2e8f0; font-size: 1.6rem; margin-bottom: 8px; }
+    .banner .target code { color: #69f0ae; font-size: 1rem; }
+    .banner .meta { color: #6b7a90; font-size: 0.85rem; margin-top: 6px; }
+    .banner-right { display: flex; align-items: center; gap: 20px; }
+
+    .grade-circle {
+        width: 90px; height: 90px;
+        border: 3px solid;
+        border-radius: 50%;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+    }
+    .grade-letter { font-size: 2rem; font-weight: 800; }
+    .grade-score { font-size: 0.75rem; color: #8892a4; }
+
+    .gate-badge {
+        padding: 8px 18px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+    }
+    .gate-badge.pass { background: rgba(105,240,174,0.15); color: #69f0ae; }
+    .gate-badge.fail { background: rgba(255,23,68,0.15); color: #ff1744; }
+
+    /* Summary Cards */
+    .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+    .card {
+        background: #111827;
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 10px;
+        padding: 18px;
+        text-align: center;
+    }
+    .card-num { display: block; font-size: 2rem; font-weight: 800; }
+    .card-label { display: block; font-size: 0.8rem; color: #6b7a90; text-transform: uppercase; letter-spacing: 0.05em; }
+    .severity-critical .card-num { color: #ff1744; }
+    .severity-high .card-num { color: #ff9100; }
+    .severity-medium .card-num { color: #ffd600; }
+    .severity-low .card-num { color: #448aff; }
+    .severity-info .card-num { color: #69f0ae; }
+    .card-total .card-num { color: #e2e8f0; }
+    .card-cvss .card-num { color: #ff6e40; }
+
+    /* Analysis Box */
+    .analysis-box {
+        background: linear-gradient(135deg, rgba(105,240,174,0.08), rgba(68,138,255,0.08));
+        border: 1px solid rgba(105,240,174,0.2);
+        border-radius: 10px;
+        padding: 20px 24px;
+        margin-bottom: 24px;
+    }
+    .analysis-box h3 { color: #69f0ae; margin-bottom: 10px; }
+    .analysis-box p { color: #c0c8d8; line-height: 1.7; }
+
+    /* Charts */
+    .charts-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .chart-container {
+        background: #111827;
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 10px;
+        padding: 20px;
+    }
+    .chart-container h3 { color: #e2e8f0; font-size: 0.95rem; margin-bottom: 12px; }
+
+    /* Sections */
+    h2 {
+        color: #e2e8f0;
+        font-size: 1.3rem;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    section { margin-bottom: 32px; }
+
+    /* Data Tables */
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #111827;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .data-table th {
+        background: #1a2233;
+        color: #8892a4;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        padding: 12px 16px;
+        text-align: left;
+    }
+    .data-table td {
+        padding: 10px 16px;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        font-size: 0.9rem;
+    }
+    .data-table tr:hover { background: rgba(255,255,255,0.02); }
+
+    /* Badges */
+    .badge {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+    .cvss-badge { background: rgba(255,110,64,0.15); color: #ff6e40; }
+
+    /* Filter Bar */
+    .filter-bar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    .filter-bar input, .filter-bar select {
+        background: #1a2233;
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #c0c8d8;
+        padding: 10px 14px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+    }
+    .filter-bar input { flex: 1; }
+    .filter-bar input::placeholder { color: #4a5568; }
+
+    /* Finding Cards */
+    .finding-card {
+        background: #111827;
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 8px;
+        margin-bottom: 8px;
+        overflow: hidden;
+    }
+    .finding-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 18px;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .finding-header:hover { background: rgba(255,255,255,0.02); }
+    .finding-id { font-weight: 700; font-family: monospace; min-width: 140px; }
+    .finding-title { flex: 1; color: #e2e8f0; }
+    .finding-badges { display: flex; gap: 6px; }
+    .expand-icon {
+        color: #4a5568;
+        font-size: 0.8rem;
+        transition: transform 0.2s;
+    }
+    .finding-card.expanded .expand-icon { transform: rotate(90deg); }
+    .finding-details {
+        display: none;
+        padding: 0 18px 18px;
+        border-top: 1px solid rgba(255,255,255,0.04);
+    }
+    .finding-card.expanded .finding-details { display: block; }
+
+    .detail-table { margin: 12px 0; }
+    .detail-table td { padding: 4px 12px 4px 0; }
+    .detail-table td:first-child { color: #6b7a90; font-size: 0.85rem; white-space: nowrap; }
+
+    .detail-section { margin: 14px 0; }
+    .detail-section h4 { color: #8892a4; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+
+    .evidence-box {
+        background: #0d1117;
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 6px;
+        padding: 12px;
+        font-family: monospace;
+        font-size: 0.85rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: #a0aec0;
+    }
+
+    .code-example {
+        background: #0d1117;
+        border: 1px solid rgba(105,240,174,0.15);
+        border-radius: 6px;
+        padding: 14px;
+        margin: 12px 0;
+        overflow-x: auto;
+        font-size: 0.85rem;
+        color: #69f0ae;
+    }
+
+    .no-findings { color: #69f0ae; font-size: 1.1rem; text-align: center; padding: 40px; }
+
+    /* Footer */
+    footer {
+        text-align: center;
+        padding: 24px;
+        color: #4a5568;
+        font-size: 0.8rem;
+        border-top: 1px solid rgba(255,255,255,0.04);
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+        .charts-row { grid-template-columns: 1fr; }
+        .banner { flex-direction: column; gap: 16px; }
+        .cards { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    details summary { cursor: pointer; }
+    details summary h2 { display: inline; border: none; padding: 0; margin: 0; }
+
+    </style>
+</head>
+<body>
+    <!-- Executive Banner -->
+    <header class="banner">
+        <div class="banner-left">
+            <h1>🛡️ MCPSec Security Report</h1>
+            <p class="target"><code>https://mcp.exa.ai</code></p>
+            <p class="meta">
+                Scan ID: <code>scan_20260226_200957_97d267</code> |
+                2026-02-26 20:09:59 UTC |
+                1.62s |
+                remote / standard
+            </p>
+        </div>
+        <div class="banner-right">
+            <div class="grade-circle" style="border-color: #ff9100">
+                <span class="grade-letter" style="color: #ff9100">C</span>
+                <span class="grade-score">65/100</span>
+            </div>
+            <div class="gate-badge fail">FAILED</div>
+        </div>
+    </header>
+
+    <!-- Summary Cards -->
+    <section class="cards">
+        <div class="card severity-critical">
+            <span class="card-num">1</span>
+            <span class="card-label">Critical</span>
+        </div>
+        <div class="card severity-high">
+            <span class="card-num">2</span>
+            <span class="card-label">High</span>
+        </div>
+        <div class="card severity-medium">
+            <span class="card-num">0</span>
+            <span class="card-label">Medium</span>
+        </div>
+        <div class="card severity-low">
+            <span class="card-num">0</span>
+            <span class="card-label">Low</span>
+        </div>
+        <div class="card severity-info">
+            <span class="card-num">0</span>
+            <span class="card-label">Info</span>
+        </div>
+        <div class="card card-total">
+            <span class="card-num">3</span>
+            <span class="card-label">Total</span>
+        </div>
+        <div class="card card-cvss">
+            <span class="card-num">8.6</span>
+            <span class="card-label">Max CVSS</span>
+        </div>
+    </section>
+
+    
+
+    <!-- Charts Row -->
+    <section class="charts-row">
+        <div class="chart-container">
+            <h3>Severity Distribution</h3>
+            <canvas id="severityChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>OWASP MCP Top 10 Coverage</h3>
+            <canvas id="owaspChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Framework Compliance</h3>
+            <canvas id="frameworkChart"></canvas>
+        </div>
+    </section>
+
+    
+    <section class="auditor-section">
+        <h2>Auditor Breakdown</h2>
+        <table class="data-table">
+            <thead><tr><th>Auditor</th><th>Findings</th><th>Max CVSS</th><th>Score</th></tr></thead>
+            <tbody>
+            <tr>
+                <td>auth</td>
+                <td>2</td>
+                <td>8.6</td>
+                <td>75/100</td>
+            </tr>
+            <tr>
+                <td>tools</td>
+                <td>1</td>
+                <td>6.8</td>
+                <td>90/100</td>
+            </tr></tbody>
+        </table>
+    </section>
+
+    <!-- Findings -->
+    <section class="findings-section">
+        <h2>Findings</h2>
+        <div class="filter-bar">
+            <input type="text" id="findingSearch" placeholder="Search findings..." onkeyup="filterFindings()">
+            <select id="severityFilter" onchange="filterFindings()">
+                <option value="">All Severities</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+                <option value="informational">Info</option>
+            </select>
+        </div>
+        <div id="findingsContainer">
+            
+        <div class="finding-card" data-severity="critical" style="border-left: 4px solid #ff1744">
+            <div class="finding-header" onclick="this.parentElement.classList.toggle('expanded')">
+                <span class="finding-id" style="color:#ff1744">MCP-AUTH-001</span>
+                <span class="finding-title">Protected Resource Metadata Missing</span>
+                <span class="finding-badges">
+                    <span class="badge" style="background:rgba(255,23,68,0.15);color:#ff1744">CRITICAL</span>
+                    <span class="badge cvss-badge">CVSS 8.6</span>
+                    <span class="badge">definitive</span>
+                </span>
+                <span class="expand-icon">▶</span>
+            </div>
+            <div class="finding-details">
+                <table class="detail-table">
+                    <tr><td>CWE</td><td>CWE-287 — Improper Authentication</td></tr>
+                    <tr><td>Detection</td><td>endpoint</td></tr>
+                    <tr><td>Effort</td><td>high</td></tr>
+                    <tr><td>CVSS Vector</td><td><code>CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:N</code></td></tr>
+                </table>
+                <div class="detail-section">
+                    <h4>Evidence</h4>
+                    <div class="evidence-box">GET https://mcp.exa.ai/.well-known/oauth-protected-resource — HTTP 404. Status: 404. Content-Type: text/plain; charset=utf-8.</div>
+                </div>
+                <div class="detail-section">
+                    <h4>Risk</h4>
+                    <p>Entry point of the entire MCP auth discovery chain is missing. MCP clients cannot determine authorization server location, cannot discover required scopes, and per the spec MUST fail the connection attempt. The server has no machine-readable auth mechanism.</p>
+                </div>
+                <div class="detail-section">
+                    <h4>Recommendation</h4>
+                    <p>Serve RFC 9728 compliant metadata at /.well-known/oauth-protected-resource with &#x27;authorization_servers&#x27; array. Alternatively, include resource_metadata URI in WWW-Authenticate header on 401 responses. FastMCP serves this endpoint automatically when any auth provider is configured.</p>
+                </div>
+                <pre class="code-example"><code># FastMCP — automatic endpoint, just configure auth
+from fastmcp import FastMCP
+from fastmcp.server.auth import OAuthProvider
+
+mcp = FastMCP(
+    name=&#x27;My Server&#x27;,
+    auth=OAuthProvider(...)
+)
+# /.well-known/oauth-protected-resource served automatically</code></pre>
+                <div class="detail-section">
+                    <h4>Standards</h4>
+                    <ul><li><code>MCP-SPEC-AUTH</code>: Protected Resource Metadata Discovery Requirements</li><li><code>RFC9728</code>: Protected Resource Metadata</li><li><code>OWASP-MCP07</code>: MCP07 — Insufficient Authentication &amp; Authorization</li><li><code>FMCP-TIER1</code>: TokenVerifier — minimum auth tier</li></ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="finding-card" data-severity="high" style="border-left: 4px solid #ff9100">
+            <div class="finding-header" onclick="this.parentElement.classList.toggle('expanded')">
+                <span class="finding-id" style="color:#ff9100">MCP-AUTH-006</span>
+                <span class="finding-title">Authorization Server Metadata Endpoint Missing</span>
+                <span class="finding-badges">
+                    <span class="badge" style="background:rgba(255,145,0,0.15);color:#ff9100">HIGH</span>
+                    <span class="badge cvss-badge">CVSS 7.2</span>
+                    <span class="badge">definitive</span>
+                </span>
+                <span class="expand-icon">▶</span>
+            </div>
+            <div class="finding-details">
+                <table class="detail-table">
+                    <tr><td>CWE</td><td>CWE-287 — Improper Authentication</td></tr>
+                    <tr><td>Detection</td><td>endpoint</td></tr>
+                    <tr><td>Effort</td><td>high</td></tr>
+                    <tr><td>CVSS Vector</td><td><code>CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:H</code></td></tr>
+                </table>
+                <div class="detail-section">
+                    <h4>Evidence</h4>
+                    <div class="evidence-box">GET https://mcp.exa.ai/.well-known/oauth-authorization-server — failed or not valid JSON. GET https://mcp.exa.ai/.well-known/openid-configuration — failed or not valid JSON. Neither discovery endpoint returned valid Authorization Server Metadata.</div>
+                </div>
+                <div class="detail-section">
+                    <h4>Risk</h4>
+                    <p>MCP clients cannot verify PKCE support, discover token endpoint, or check DCR support. The spec requires clients to refuse authorization if neither discovery mechanism returns valid metadata.</p>
+                </div>
+                <div class="detail-section">
+                    <h4>Recommendation</h4>
+                    <p>Serve OAuth 2.0 Authorization Server Metadata at /.well-known/oauth-authorization-server (preferred) or OpenID Connect Discovery at /.well-known/openid-configuration. FastMCP OAuthProvider serves this automatically.</p>
+                </div>
+                <pre class="code-example"><code># FastMCP OAuthProvider serves AS metadata automatically
+from fastmcp import FastMCP
+from fastmcp.server.auth import OAuthProvider
+
+mcp = FastMCP(
+    name=&#x27;My Server&#x27;,
+    auth=OAuthProvider(
+        issuer=&#x27;https://auth.example.com&#x27;,
+        # ... provider config
+    )
+)
+# /.well-known/oauth-authorization-server served automatically</code></pre>
+                <div class="detail-section">
+                    <h4>Standards</h4>
+                    <ul><li><code>MCP-SPEC-AUTH</code>: Authorization Server Metadata Discovery — MUST support RFC 8414 or OIDC</li><li><code>RFC8414</code>: OAuth 2.0 Authorization Server Metadata</li><li><code>OWASP-MCP07</code>: MCP07 — Insufficient Authentication &amp; Authorization</li></ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="finding-card" data-severity="high" style="border-left: 4px solid #ff9100">
+            <div class="finding-header" onclick="this.parentElement.classList.toggle('expanded')">
+                <span class="finding-id" style="color:#ff9100">MCP-TOOL-004</span>
+                <span class="finding-title">Tool Input Schema Missing Validation Constraints</span>
+                <span class="finding-badges">
+                    <span class="badge" style="background:rgba(255,145,0,0.15);color:#ff9100">HIGH</span>
+                    <span class="badge cvss-badge">CVSS 6.8</span>
+                    <span class="badge">definitive</span>
+                </span>
+                <span class="expand-icon">▶</span>
+            </div>
+            <div class="finding-details">
+                <table class="detail-table">
+                    <tr><td>CWE</td><td>CWE-20 — Improper Input Validation</td></tr>
+                    <tr><td>Detection</td><td>introspection</td></tr>
+                    <tr><td>Effort</td><td>low</td></tr>
+                    <tr><td>CVSS Vector</td><td><code>CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:L/A:N</code></td></tr>
+                </table>
+                <div class="detail-section">
+                    <h4>Evidence</h4>
+                    <div class="evidence-box">2 unconstrained sensitive parameter(s) across 2 tool(s):
+  - web_search_exa.query (type: string, sensitivity: command/code, constraints: none)
+  - get_code_context_exa.query (type: string, sensitivity: command/code, constraints: none)</div>
+                </div>
+                <div class="detail-section">
+                    <h4>Risk</h4>
+                    <p>Unconstrained string parameters for file paths, URLs, commands, or structured content are the entry point for injection attacks. Without maxLength, pattern, or enum constraints, LLM-generated inputs can contain path traversal sequences (../), shell metacharacters, or oversized payloads.</p>
+                </div>
+                <div class="detail-section">
+                    <h4>Recommendation</h4>
+                    <p>Add JSON Schema validation constraints to all sensitive parameters. Use &#x27;maxLength&#x27; to prevent oversized inputs, &#x27;pattern&#x27; for format enforcement, and &#x27;enum&#x27; for known-value parameters.</p>
+                </div>
+                <pre class="code-example"><code>from pydantic import Field
+
+# BAD — unconstrained path parameter
+@mcp.tool()
+def read_file(path: str) -&gt; str:  # ❌ no constraints
+    ...
+
+# GOOD — constrained with validation
+@mcp.tool()
+def read_file(
+    path: str = Field(
+        max_length=255,
+        pattern=r&#x27;^[a-zA-Z0-9_/.-]+$&#x27;,  # no ../ or special chars
+        description=&#x27;Relative file path within the workspace&#x27;
+    )
+) -&gt; str:
+    ...</code></pre>
+                <div class="detail-section">
+                    <h4>Standards</h4>
+                    <ul><li><code>OWASP-MCP05</code>: MCP05 — Command Injection &amp; Execution</li><li><code>MCP-SPEC-INPUT</code>: Input Validation — tool input sanitization</li><li><code>OWASP-LLM02</code>: LLM02 — Insecure Output Handling</li></ul>
+                </div>
+            </div>
+        </div>
+        </div>
+    </section>
+
+    <!-- Remediation Priorities -->
+    <section class="remediation-section">
+        <h2>Remediation Priorities</h2>
+        
+    <table class="data-table">
+        <thead>
+            <tr><th>#</th><th>Finding</th><th>Severity</th><th>CVSS</th><th>Effort</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td style="color:#ff1744">MCP-AUTH-001</td>
+                <td><span class="badge" style="background:rgba(255,23,68,0.15);color:#ff1744">critical</span></td>
+                <td>8.6</td>
+                <td>high</td>
+                <td>Serve RFC 9728 compliant metadata at /.well-known/oauth-protected-resource with &#x27;authorization_serve...</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td style="color:#ff9100">MCP-AUTH-006</td>
+                <td><span class="badge" style="background:rgba(255,145,0,0.15);color:#ff9100">high</span></td>
+                <td>7.2</td>
+                <td>high</td>
+                <td>Serve OAuth 2.0 Authorization Server Metadata at /.well-known/oauth-authorization-server (preferred)...</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td style="color:#ff9100">MCP-TOOL-004</td>
+                <td><span class="badge" style="background:rgba(255,145,0,0.15);color:#ff9100">high</span></td>
+                <td>6.8</td>
+                <td>low</td>
+                <td>Add JSON Schema validation constraints to all sensitive parameters. Use &#x27;maxLength&#x27; to prevent overs...</td>
+            </tr></tbody>
+    </table>
+    </section>
+
+    <!-- Standards Cross-Reference -->
+    <section class="standards-section">
+        <details>
+            <summary><h2 style="display:inline">Standards Cross-Reference</h2></summary>
+            
+    <table class="data-table">
+        <thead><tr><th>Standard</th><th>Findings</th></tr></thead>
+        <tbody><tr><td><code>FMCP-TIER1</code></td><td>MCP-AUTH-001</td></tr><tr><td><code>MCP-SPEC-AUTH</code></td><td>MCP-AUTH-001, MCP-AUTH-006</td></tr><tr><td><code>MCP-SPEC-INPUT</code></td><td>MCP-TOOL-004</td></tr><tr><td><code>OWASP-LLM02</code></td><td>MCP-TOOL-004</td></tr><tr><td><code>OWASP-MCP05</code></td><td>MCP-TOOL-004</td></tr><tr><td><code>OWASP-MCP07</code></td><td>MCP-AUTH-001, MCP-AUTH-006</td></tr><tr><td><code>RFC8414</code></td><td>MCP-AUTH-006</td></tr><tr><td><code>RFC9728</code></td><td>MCP-AUTH-001</td></tr></tbody>
+    </table>
+        </details>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>Generated by MCPSec v0.1.0 — MCP Security Scanner |
+           Spec: draft-2025-11-25</p>
+    </footer>
+
+    <script>
+
+    // Severity Donut
+    new Chart(document.getElementById('severityChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ["Critical", "High", "Medium", "Low", "Informational"],
+            datasets: [{
+                data: [1, 2, 0, 0, 0],
+                backgroundColor: ["#ff1744", "#ff9100", "#ffd600", "#448aff", "#69f0ae"],
+                borderColor: '#0a0e17',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { color: '#c0c8d8' } }
+            }
+        }
+    });
+
+    // OWASP Radar
+    new Chart(document.getElementById('owaspChart'), {
+        type: 'radar',
+        data: {
+            labels: ["MCP01", "MCP02", "MCP03", "MCP04", "MCP05", "MCP06", "MCP07", "MCP08", "MCP09", "MCP10"],
+            datasets: [{
+                label: 'Coverage',
+                data: [100, 100, 100, 100, 0, 100, 0, 100, 100, 100],
+                fill: true,
+                backgroundColor: 'rgba(105,240,174,0.2)',
+                borderColor: '#69f0ae',
+                pointBackgroundColor: '#69f0ae',
+                pointBorderColor: '#0a0e17',
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: { color: '#8892a4', stepSize: 50 },
+                    grid: { color: 'rgba(255,255,255,0.08)' },
+                    angleLines: { color: 'rgba(255,255,255,0.08)' },
+                    pointLabels: { color: '#c0c8d8', font: { size: 11 } }
+                }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+
+    // Framework Bar
+    new Chart(document.getElementById('frameworkChart'), {
+        type: 'bar',
+        data: {
+            labels: ['MCP Spec', 'OWASP MCP', 'FastMCP'],
+            datasets: [{
+                label: 'Score',
+                data: [65, 80, 85],
+                backgroundColor: ['#448aff', '#69f0ae', '#ffd600'],
+                borderColor: '#0a0e17',
+                borderWidth: 1,
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            responsive: true,
+            indexAxis: 'y',
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: { color: '#8892a4' },
+                    grid: { color: 'rgba(255,255,255,0.06)' }
+                },
+                y: {
+                    ticks: { color: '#c0c8d8' },
+                    grid: { display: false }
+                }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+    
+
+    function filterFindings() {
+        const query = document.getElementById('findingSearch').value.toLowerCase();
+        const severity = document.getElementById('severityFilter').value;
+        document.querySelectorAll('.finding-card').forEach(card => {
+            const text = card.textContent.toLowerCase();
+            const sev = card.dataset.severity;
+            const matchQuery = !query || text.includes(query);
+            const matchSev = !severity || sev === severity;
+            card.style.display = (matchQuery && matchSev) ? '' : 'none';
+        });
+    }
+
+    </script>
+</body>
+</html>
