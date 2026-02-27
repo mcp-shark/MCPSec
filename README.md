@@ -2,6 +2,8 @@
 
 **The security linter for MCP**
 
+[![PyPI](https://img.shields.io/pypi/v/mcpsharksec.svg)](https://pypi.org/project/mcpsharksec/)
+[![CI](https://github.com/mcp-shark/mcpsec/actions/workflows/ci.yml/badge.svg)](https://github.com/mcp-shark/mcpsec/actions)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![MCP Shark](https://img.shields.io/badge/MCP%20Shark-project%20family-orange.svg)](https://www.mcpshark.sh/)
@@ -52,7 +54,7 @@ MCPSec fills this gap.
 ### Install
 
 ```bash
-pip install git+https://github.com/mcp-shark/mcpsec.git
+pip install mcpsharksec
 ```
 
 ### First Scan
@@ -85,19 +87,14 @@ MCPSec is itself an MCP server — any MCP client can invoke its scanning tools 
 ### Start the Server
 
 ```bash
-mcpsec serve                              # stdio (Claude Desktop, Cursor)
+mcpsec serve                              # stdio (Claude Desktop, Cursor, Claude Code)
 mcpsec serve --transport http --port 8000  # Streamable HTTP
 ```
 
-### Claude Desktop / Claude Code, VS Code, Cursor Dev Test Set-up
-
-All three clients have the same config format distinction — installed vs source. Here's each:
-
-**Claude Desktop / Claude Code**
+### Claude Desktop
 
 Add to `claude_desktop_config.json`:
 
-Installed (`pip install -e .`):
 ```json
 {
   "mcpServers": {
@@ -109,7 +106,7 @@ Installed (`pip install -e .`):
 }
 ```
 
-From source:
+From source (without pip install):
 ```json
 {
   "mcpServers": {
@@ -122,15 +119,46 @@ From source:
 }
 ```
 
-**Cursor**
+### Claude Code
 
-Add to `.cursor/mcp.json` — **same format as Claude Desktop** for both installed and source options.
+Claude Code uses its own CLI to manage MCP servers:
 
-**VS Code**
+```bash
+# Add MCPSec (installed via pip)
+claude mcp add-json mcpsec '{"command":"mcpsec","args":["serve"]}'
+
+# Or from source
+claude mcp add-json mcpsec '{"command":"/path/to/mcpsec/.venv/bin/python","args":["-m","mcpsec.cli","serve"],"cwd":"/path/to/mcpsec"}'
+
+# Use --scope to control availability
+claude mcp add-json mcpsec --scope user '{"command":"mcpsec","args":["serve"]}'
+# Scopes: local (default, current project), project (shared via .mcp.json), user (all projects)
+
+# Manage servers
+claude mcp list
+claude mcp get mcpsec
+claude mcp remove mcpsec
+```
+
+### Cursor
+
+Add to `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "mcpsec": {
+      "command": "mcpsec",
+      "args": ["serve"]
+    }
+  }
+}
+```
+
+### VS Code
 
 Add to `.vscode/settings.json`:
 
-Installed:
 ```json
 {
   "mcp": {
@@ -144,22 +172,37 @@ Installed:
 }
 ```
 
-From source:
+### Gemini CLI
+
+Add to `~/.gemini/settings.json` (global) or `.gemini/settings.json` (project):
+
 ```json
 {
-  "mcp": {
-    "servers": {
-      "mcpsec": {
-        "command": "/path/to/mcpsec/.venv/bin/python",
-        "args": ["-m", "mcpsec.cli", "serve"],
-        "cwd": "/path/to/mcpsec"
-      }
+  "mcpServers": {
+    "mcpsec": {
+      "command": "mcpsec",
+      "args": ["serve"]
     }
   }
 }
 ```
 
-**Summary:** Claude Desktop, Claude Code, and Cursor all use `mcpServers` key. VS Code uses `mcp.servers`. The installed vs source distinction is the same across all three.
+Or use the Gemini CLI command:
+
+```bash
+gemini mcp add --transport stdio mcpsec -- mcpsec serve
+```
+
+### ChatGPT
+
+ChatGPT requires a **remote HTTPS endpoint** — it cannot connect to local stdio servers. To use MCPSec with ChatGPT:
+
+1. Deploy MCPSec with Streamable HTTP on a public HTTPS URL (or use a tunnel like ngrok for testing)
+2. Enable **Developer Mode** in ChatGPT settings (requires Pro, Team, Enterprise, or Edu plan)
+3. Go to **Settings → Apps & Connectors → Create**
+4. Enter your MCPSec server URL (e.g. `https://your-server.com/mcp`)
+
+> **Note:** Local-only usage is recommended for security scanning. ChatGPT integration is best suited for team/enterprise deployments (see Roadmap M6).
 
 ### Passthrough LLM Flow
 
@@ -170,7 +213,7 @@ In MCP server mode, MCPSec doesn't need its own LLM API key. Instead:
 3. The **client's own LLM** reasons over the prompts
 4. Client calls `classify_tools(scan_id, classifications)` → merged into findings
 
-This means Claude Desktop uses Claude, Cursor uses its configured model, etc. — automatically.
+This means Claude Desktop uses Claude, Cursor uses its configured model, Gemini CLI uses Gemini, etc. — automatically.
 
 ---
 
@@ -367,7 +410,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install mcpsec
+      - run: pip install mcpsharksec
       - run: mcpsec ci ${{ vars.MCP_SERVER_URL }} --fail-on 7.0 --json
 ```
 
@@ -429,6 +472,8 @@ graph TB
         CC[Claude Code]
         VS[VS Code]
         CU[Cursor]
+        GE[Gemini CLI]
+        GP[ChatGPT]
         CI[CI/CD Pipelines]
     end
 
@@ -512,8 +557,8 @@ pytest -m exa -v                        # Real-world Exa MCP server tests
 
 | Channel | Milestone | Status |
 |---|---|---|
-| **PyPI** — `pip install mcpsec` | M3 | 🔄 In Progress |
-| **npm** — `npm install mcpsec` | M4 | Planned |
+| **PyPI** — `pip install mcpsharksec` | M3 | ✅ Published |
+| **npm** — `npm install mcpsharksec` | M4 | Planned |
 | **GitHub Action** — `mcp-shark/mcpsec-action@v1` | M4 | Planned |
 
 ---
