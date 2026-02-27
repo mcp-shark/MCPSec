@@ -139,37 +139,6 @@ def _format_scan_summary(result) -> dict:
 # Scanning tools
 # ---------------------------------------------------------------------------
 
-@mcp.tool()
-async def scan_server(
-    url: str,
-    access_level: str = "remote",
-    depth: str = "standard",
-    test_token: Optional[str] = None,
-) -> dict:
-    """Run a full comprehensive security scan of a remote MCP server.
-
-    Executes all auditors (auth, transport, authorization, tools) and
-    stores the result for later retrieval and reporting.
-
-    Args:
-        url: Target MCP server URL (e.g. https://my-mcp-server.com)
-        access_level: Scanner access — 'remote', 'authenticated', or 'local'
-        depth: Scan thoroughness — 'quick', 'standard', or 'thorough'
-        test_token: Bearer token for active scanning (required for 'authenticated')
-
-    Returns:
-        Scan summary with all findings, severity counts, and compliance status.
-    """
-    engine = _build_engine(
-        target_url=url,
-        access_level=access_level,
-        depth=depth,
-        test_token=test_token,
-    )
-    result = await engine.run()
-    _storage.save_scan(result)
-    return _format_scan_summary(result)
-
 
 @mcp.tool()
 async def scan_auth(

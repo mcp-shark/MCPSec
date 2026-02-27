@@ -190,6 +190,7 @@ This means Claude Desktop uses Claude, Cursor uses its configured model, etc. �
 | `mcpsec report <scan_id>` | Generate compliance report |
 | `mcpsec list` | List previous scans |
 | `mcpsec compare <id_a> <id_b>` | Compare two scans |
+| `mcpsec scan_local` | Enumerate & audit local MCP servers *(stub)* |
 
 ### Common Flags
 
@@ -419,7 +420,7 @@ graph TB
     end
 
     subgraph Server["MCPSec Server - FastMCP"]
-        MCP[12 MCP Tools<br/>Streamable HTTP / stdio]
+        MCP[14 MCP Tools<br/>Streamable HTTP / stdio]
         CLI[CLI + CI/CD]
     end
 
@@ -477,22 +478,22 @@ pytest -m exa -v                        # Real-world Exa MCP server tests
 
 ## Competitive Comparison
 
-| Capability | Snyk | MintMCP | MCPScan.ai | MCPShield | **MCPSec** |
-|---|---|---|---|---|---|
-| MCP Spec compliance audit | ❌ | ❌ | ❌ | ❌ | ✅ |
-| FastMCP auth baseline | ❌ | ❌ | ❌ | ❌ | ✅ |
-| OAuth 2.1 verification | ❌ | ❌ | Partial | ❌ | ✅ |
-| OWASP MCP Top 10 full coverage | Partial | Partial | Partial | Partial | ✅ |
-| Tool poisoning (LLM) | ✅ | ✅ | ✅ | ❌ | ✅ |
-| Supply chain scanning | ❌ | ❌ | ❌ | ✅ | ✅ |
-| SSRF endpoint scanning | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Remediation + code examples | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Compliance scorecard | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Scan comparison / trending | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Interactive HTML dashboard | ❌ | ❌ | ❌ | ❌ | ✅ |
-| CI/CD integration | ✅ | ❌ | ❌ | ✅ | ✅ |
-| MCP server mode | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Privacy (fully local) | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Capability | Snyk | MintMCP | MCPScan.ai | MCPShield | AgentAudit | **MCPSec** |
+|---|---|---|---|---|---|---|
+| MCP Spec compliance audit | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| FastMCP auth baseline | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| OAuth 2.1 verification | ❌ | ❌ | Partial | ❌ | ❌ | ✅ |
+| OWASP MCP Top 10 full coverage | Partial | Partial | Partial | Partial | Partial | ✅ |
+| Tool poisoning (LLM) | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
+| Supply chain scanning | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
+| SSRF endpoint scanning | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Remediation + code examples | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Compliance scorecard | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Scan comparison / trending | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Interactive HTML dashboard | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| CI/CD integration | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ |
+| MCP server mode | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Privacy (fully local) | ❌ | ❌ | ❌ | ✅ | ❌ | ✅ |
 
 ---
 
@@ -503,14 +504,17 @@ pytest -m exa -v                        # Real-world Exa MCP server tests
 | **M1** | Core scanner, 16 findings, CLI, reports | ✅ Complete |
 | **M2** | All 34 findings, LLM classifier, test servers, scorecard, HTML reports | ✅ Complete |
 | **M3** | Public release, PyPI package, 5+ client testing, documentation | 🔄 In Progress |
-| **M4** | Auto-fix generation (Tier 3), structured fix descriptors | Planned |
+| **M4** | Auto-fix generation (Tier 3), structured fix descriptors, npm wrapper, GitHub Action | Planned |
 | **M5** | Agent Scanner (separate MCP server, OWASP Agentic AI Top 10) | Planned |
 | **M6** | Enterprise (remote deployment, team dashboards, policy engine) | Planned |
 
-### Distribution (M3)
-- **PyPI** — `pip install mcpsec`
-- **npm** — `npm install mcpsec`
-- **GitHub Action** — `uses: mcp-shark/mcpsec-action@v1`
+### Distribution
+
+| Channel | Milestone | Status |
+|---|---|---|
+| **PyPI** — `pip install mcpsec` | M3 | 🔄 In Progress |
+| **npm** — `npm install mcpsec` | M4 | Planned |
+| **GitHub Action** — `mcp-shark/mcpsec-action@v1` | M4 | Planned |
 
 ---
 
