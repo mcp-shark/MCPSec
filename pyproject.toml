@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mcpsharksec"
-version = "0.1.0"
+version = "0.1.1"
 description = "The security linter for MCP — scan any server for compliance with the MCP spec, OWASP MCP Top 10, and FastMCP baseline"
 readme = "README.md"
 license = "MIT"
