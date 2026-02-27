@@ -5,14 +5,44 @@ build-backend = "hatchling.build"
 [project]
 name = "mcpsec"
 version = "0.1.0"
-description = "MCP Security Scanner"
+description = "The security linter for MCP — scan any server for compliance with the MCP spec, OWASP MCP Top 10, and FastMCP baseline"
+readme = "README.md"
+license = "MIT"
 requires-python = ">=3.12"
+authors = [
+    { name = "MCP Shark", url = "https://www.mcpshark.sh/" },
+]
+keywords = [
+    "mcp",
+    "security",
+    "scanner",
+    "oauth",
+    "owasp",
+    "fastmcp",
+    "model-context-protocol",
+    "compliance",
+    "audit",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
+    "Typing :: Typed",
+]
 dependencies = [
     "fastmcp>=3.0.0",
     "httpx>=0.27.0",
     "pydantic>=2.0.0",
     "litellm>=1.0.0",
 ]
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
@@ -21,18 +51,24 @@ dev = [
     "cryptography>=42.0.0",
 ]
 
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/mcpsec"]
+[project.urls]
+Homepage = "https://github.com/mcp-shark/mcpsec"
+Repository = "https://github.com/mcp-shark/mcpsec"
+Issues = "https://github.com/mcp-shark/mcpsec/issues"
+Documentation = "https://github.com/mcp-shark/mcpsec#readme"
+MCP-Shark = "https://www.mcpshark.sh/"
 
 [project.scripts]
 mcpsec = "mcpsec.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcpsec"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 markers = [
     "llm: requires live LLM API key (ANTHROPIC_API_KEY, OPENAI_API_KEY, etc.)",
-     "exa: requires network access to mcp.exa.ai",
+    "exa: requires network access to mcp.exa.ai",
 ]
 filterwarnings = [
     "ignore::RuntimeWarning:litellm",
